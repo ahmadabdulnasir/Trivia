@@ -246,6 +246,7 @@ def create_app(test_config=None):
         try:
             body = request.get_json()
             if not ('quiz_category' in body and 'previous_questions' in body):
+                print("Incomplete body")
                 abort(422)
 
             category = body.get('quiz_category')
@@ -253,7 +254,8 @@ def create_app(test_config=None):
 
             if category['type'] == 'click':
                 available_questions = Question.query.filter(
-                    Question.id.notin_((previous_questions))).all()
+                    Question.id.notin_((previous_questions))
+                ).all()
             else:
                 available_questions = Question.query.filter_by(
                     category=category['id']).filter(Question.id.notin_((previous_questions))).all()

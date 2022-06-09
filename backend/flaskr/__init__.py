@@ -9,12 +9,21 @@ from models import setup_db, Question, Category
 QUESTIONS_PER_PAGE = 10
 
 
-def paginate_questions(request, selection):
+def paginate_questions(request, questions):
+    """Pagination helper of questions
+
+    Args:
+        request (_type_): current request
+        questions (_type_): questions query objects
+
+    Returns:
+        list: list of formatted question
+    """
     page = request.args.get('page', 1, type=int)
     start = (page - 1) * QUESTIONS_PER_PAGE
     end = start + QUESTIONS_PER_PAGE
 
-    questions = [question.format() for question in selection]
+    questions = [question.format() for question in questions]
     current_questions = questions[start:end]
 
     return current_questions
@@ -26,14 +35,15 @@ def create_app(test_config=None):
     # db.init_app(app)
 
     """
-    @TODO: Done Set up CORS. Allow '*' for origins. Delete the sample route after completing the TODOs
+    Done Set up CORS. Allow '*' for origins. Delete the sample route after completing the TODOs
     """
     CORS(app)
-    """
-    @TODO: Done Use the after_request decorator to set Access-Control-Allow
-    """
+    
     @app.after_request
     def after_request(response):
+        """
+            after_request decorator to set Access-Control-Allow
+        """
         response.headers.add(
             'Access-Control-Allow-Headers',
             'Content-Type,Authorization,true'
@@ -44,13 +54,15 @@ def create_app(test_config=None):
         )
         return response
 
-    """
-    @TODO: Done
-    Create an endpoint to handle GET requests
-    for all available categories.
+    """Done
+        Create an endpoint to handle GET requests
+        for all available categories.
     """
     @app.route('/categories')
     def retrieve_categories():
+        """
+        Return All available categories
+        """
         categories = Category.query.order_by(Category.type).all()
 
         if len(categories) == 0:
@@ -76,11 +88,9 @@ def create_app(test_config=None):
     """
     @app.route('/questions')
     def retrieve_questions():
-        # TODO: Use pagination
-        # page = request.args.get('page', 1)
         page = request.args.get('page', default=1, type=int)
-        selection = Question.query.order_by(Question.id).all()
-        current_questions = paginate_questions(request, selection)
+        questions = Question.query.order_by(Question.id).all()
+        current_questions = paginate_questions(request, questions)
 
         categories = Category.query.order_by(Category.type).all()
 
@@ -90,7 +100,7 @@ def create_app(test_config=None):
         return jsonify({
             'success': True,
             'questions': current_questions,
-            'total_questions': len(selection),
+            'total_questions': len(questions),
             'categories': {category.id: category.type for category in categories},
             'current_category': None
         })
@@ -104,6 +114,9 @@ def create_app(test_config=None):
     """
     @app.route("/questions/<question_id>", methods=['DELETE'])
     def delete_question(question_id):
+        """
+            Delete a single question by the question_id
+        """
         try:
             question = Question.query.get(question_id)
             question.delete()
@@ -126,6 +139,9 @@ def create_app(test_config=None):
     """
     @app.route("/questions", methods=['POST'])
     def add_question():
+        """
+            Create a new Question
+        """
         body = request.get_json()
 
         if not ('question' in body and 'answer' in body and 'difficulty' in body and 'category' in body):
@@ -168,12 +184,13 @@ def create_app(test_config=None):
     def search_questions():
         body = request.get_json()
         search_term = body.get('searchTerm', None)
-
+        # search_term_dump = request.form.get('searchTerm', None)
+        # print(search_term)
         if search_term:
+            search_term = search_term.strip()
             search_results = Question.query.filter(
                 Question.question.ilike(f'%{search_term}%')
             ).all()
-
             return jsonify({
                 'success': True,
                 'questions': [question.format() for question in search_results],
@@ -192,7 +209,9 @@ def create_app(test_config=None):
     """
     @app.route('/categories/<int:category_id>/questions', methods=['GET'])
     def retrieve_questions_by_category(category_id):
-
+        """
+            Return questions based on category
+        """
         try:
             questions = Question.query.filter(
                 Question.category == str(category_id)
@@ -204,7 +223,8 @@ def create_app(test_config=None):
                 'total_questions': len(questions),
                 'current_category': category_id
             })
-        except:
+        except Exception as exp:
+            print(f"Error: {exp}")
             abort(404)
 
     """
@@ -220,7 +240,9 @@ def create_app(test_config=None):
     """
     @app.route('/quizzes', methods=['POST'])
     def play_quiz():
-
+        """
+            Play the Trivia Quiz
+        """
         try:
             body = request.get_json()
             if not ('quiz_category' in body and 'previous_questions' in body):
@@ -249,7 +271,7 @@ def create_app(test_config=None):
 
 
     """
-    @TODO:
+    @TODO: Done
     Create error handlers for all expected errors
     including 404 and 422.
     """
@@ -264,6 +286,7 @@ def create_app(test_config=None):
     
     @app.errorhandler(422)
     def unprocessable_error(error):
+        print(error)
         return jsonify({
             "success": False,
             "error": 422,

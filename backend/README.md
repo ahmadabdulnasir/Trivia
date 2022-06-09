@@ -102,3 +102,10 @@ createdb trivia_test
 psql trivia_test < trivia.psql
 python test_flaskr.py
 ```
+
+## Running
+```shell
+export FLASK_APP=flaskr
+export FLASK_ENV=development
+flask run
+```

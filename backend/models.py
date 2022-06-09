@@ -2,11 +2,14 @@ import os
 from sqlalchemy import Column, String, Integer, create_engine
 from flask_sqlalchemy import SQLAlchemy
 import json
+from flask_migrate import Migrate
 
-database_name = 'trivia'
-database_path = 'postgres://{}/{}'.format('localhost:5432', database_name)
-
+database_name = 'udacity_triviadb'
+database_path = 'postgres://udacity_trivia:Pass@1234@{}/{}'.format('localhost:5432', database_name)
+# SQLALCHEMY_DATABASE_URI = "postgres://udacity_fyyur:Pass@1234@localhost:5432/udacity_fyyurdb"
 db = SQLAlchemy()
+# migrate = Migrate()
+
 
 """
 setup_db(app)

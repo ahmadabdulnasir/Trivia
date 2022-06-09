@@ -1,0 +1,7 @@
+#sudo -u postgres  psql
+CREATE DATABASE udacity_triviadb;
+CREATE USER udacity_trivia WITH password 'Pass@1234';
+ALTER ROLE udacity_trivia SET client_encoding TO 'utf8';
+ALTER ROLE udacity_trivia SET default_transaction_isolation TO 'read committed';
+ALTER ROLE udacity_trivia SET timezone TO 'GMT+1';
+GRANT ALL PRIVILEGES ON DATABASE udacity_triviadb TO udacity_trivia;

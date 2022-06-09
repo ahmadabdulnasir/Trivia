@@ -37,7 +37,7 @@ def create_app(test_config=None):
     """
     Done Set up CORS. Allow '*' for origins. Delete the sample route after completing the TODOs
     """
-    CORS(app)
+    CORS(app, resources={"/": {"origins": "*"}})
     
     @app.after_request
     def after_request(response):
@@ -54,23 +54,28 @@ def create_app(test_config=None):
         )
         return response
 
+    
     """Done
         Create an endpoint to handle GET requests
         for all available categories.
     """
     @app.route('/categories')
-    def retrieve_categories():
+    def category_list():
         """
         Return All available categories
         """
         categories = Category.query.order_by(Category.type).all()
-
+        # categories = Category.query.all()
         if len(categories) == 0:
             abort(404)
+        all_categories = {}
+        for category in categories:
+            all_categories[category.id] = category.type
+
         # category.format()
         return jsonify({
             'success': True,
-            'categories': {category.id: category.type for category in categories}
+            'categories': all_categories
         })
 
 
@@ -87,22 +92,24 @@ def create_app(test_config=None):
     Clicking on the page numbers should update the questions.
     """
     @app.route('/questions')
-    def retrieve_questions():
+    def question_list():
         page = request.args.get('page', default=1, type=int)
         questions = Question.query.order_by(Question.id).all()
         current_questions = paginate_questions(request, questions)
+        if len(current_questions) == 0:
+            # query return empty
+            abort(404)
 
         categories = Category.query.order_by(Category.type).all()
-
-        if len(current_questions) == 0:
-            abort(404)
+        all_categories = {}
+        for category in categories:
+            all_categories[category.id] = category.type
 
         return jsonify({
             'success': True,
             'questions': current_questions,
             'total_questions': len(questions),
-            'categories': {category.id: category.type for category in categories},
-            'current_category': None
+            'categories': all_categories,
         })
 
     """
@@ -113,7 +120,7 @@ def create_app(test_config=None):
     This removal will persist in the database and when you refresh the page.
     """
     @app.route("/questions/<question_id>", methods=['DELETE'])
-    def delete_question(question_id):
+    def question_delete(question_id):
         """
             Delete a single question by the question_id
         """
@@ -124,7 +131,8 @@ def create_app(test_config=None):
                 'success': True,
                 'deleted': question_id
             })
-        except:
+        except Exception as exp:
+            print(f"Error: {exp}")
             abort(422)
 
     """
@@ -138,32 +146,46 @@ def create_app(test_config=None):
     of the questions list in the "List" tab.
     """
     @app.route("/questions", methods=['POST'])
-    def add_question():
+    def question_create():
         """
             Create a new Question
         """
         body = request.get_json()
+        question = body.get('question')
+        answer = body.get('answer')
+        difficulty = body.get('difficulty')
+        category = body.get('category')
 
-        if not ('question' in body and 'answer' in body and 'difficulty' in body and 'category' in body):
-            abort(422)
-
-        new_question = body.get('question')
-        new_answer = body.get('answer')
-        new_difficulty = body.get('difficulty')
-        new_category = body.get('category')
+        error_list = []
+        required_info = {
+            "question" : question,
+            "answer" : answer,
+            "difficulty" : difficulty,
+            "category" : category,
+        }
+        for entry in required_info.keys():
+            if not required_info.get(entry):
+                error_list.append(f"Invalid Entry of: {entry}")
+        if error_list:
+            print({
+                'success': False,
+                "detail": "Fail to Create Question, Non or Partial Data Received.",
+                "errors": error_list,
+            })
+            abort(406)
 
         try:
-            question = Question(
-                question=new_question, 
-                answer=new_answer,      
-                difficulty=new_difficulty, 
-                category=new_category
+            target_question = Question(
+                question=question, 
+                answer=answer,      
+                difficulty=difficulty, 
+                category=category
             )
-            question.insert()
+            target_question.insert()
 
             return jsonify({
                 'success': True,
-                'created': question.id,
+                'created': target_question.id,
             })
 
         except Exception as exp:
@@ -181,7 +203,7 @@ def create_app(test_config=None):
     Try using the word "title" to start.
     """
     @app.route('/questions/search', methods=['POST'])
-    def search_questions():
+    def question_search():
         body = request.get_json()
         search_term = body.get('searchTerm', None)
         # search_term_dump = request.form.get('searchTerm', None)
@@ -191,13 +213,18 @@ def create_app(test_config=None):
             search_results = Question.query.filter(
                 Question.question.ilike(f'%{search_term}%')
             ).all()
+
+            paginated_search_results = paginate_questions(request, search_results)
+
             return jsonify({
                 'success': True,
-                'questions': [question.format() for question in search_results],
+                'questions': [question.format() for question in paginated_search_results],
                 'total_questions': len(search_results),
                 'current_category': None
             })
-        abort(404)
+        else:
+            print("No search term!!!")
+            abort(404)
 
     """
     @TODO: Done
@@ -208,27 +235,29 @@ def create_app(test_config=None):
     category to be shown.
     """
     @app.route('/categories/<int:category_id>/questions', methods=['GET'])
-    def retrieve_questions_by_category(category_id):
+    def category_questions_list(category_id):
         """
             Return questions based on category
         """
         try:
             questions = Question.query.filter(
-                Question.category == str(category_id)
+                Question.category == int(category_id)
             ).all()
-
+            paginated_category_questions = paginate_questions(
+                request, questions
+            )
             return jsonify({
                 'success': True,
-                'questions': [question.format() for question in questions],
+                'questions': paginated_category_questions,
                 'total_questions': len(questions),
                 'current_category': category_id
             })
         except Exception as exp:
             print(f"Error: {exp}")
-            abort(404)
+            abort(422)
 
     """
-    @TODO:
+    @TODO: Done
     Create a POST endpoint to get questions to play the quiz.
     This endpoint should take category and previous question parameters
     and return a random questions within the given category,
@@ -239,33 +268,52 @@ def create_app(test_config=None):
     and shown whether they were correct or not.
     """
     @app.route('/quizzes', methods=['POST'])
-    def play_quiz():
+    def trivia_quiz():
         """
             Play the Trivia Quiz
         """
         try:
             body = request.get_json()
-            if not ('quiz_category' in body and 'previous_questions' in body):
-                print("Incomplete body")
-                abort(422)
-
-            category = body.get('quiz_category')
-            previous_questions = body.get('previous_questions')
-
-            if category['type'] == 'click':
-                available_questions = Question.query.filter(
-                    Question.id.notin_((previous_questions))
-                ).all()
+            quiz_category = body.get("quiz_category")
+            previous_questions = body.get("previous_questions")
+            required_info = {
+                "quiz_category": quiz_category,
+                # "previous_questions": previous_questions,
+            }
+            error_list = []
+            for entry in required_info.keys():
+                if not required_info.get(entry):
+                    error_list.append(f"Invalid Entry of: {entry}")
+            if error_list:
+                print({
+                    'success': False,
+                    "detail": "Fail to start Quiz, Non or Partial Data Received.",
+                    "errors": error_list,
+                })
+                abort(406)
+            # print(quiz_category)
+            # print(previous_questions)
+            # get
+            all_questions = Question.query.filter(
+                Question.id.notin_((previous_questions))
+            ).all()
+            if quiz_category['type'] == 'click':
+                target_questions = all_questions
             else:
-                available_questions = Question.query.filter_by(
-                    category=category['id']).filter(Question.id.notin_((previous_questions))).all()
-
-            new_question = available_questions[random.randrange(
-                0, len(available_questions))].format() if len(available_questions) > 0 else None
-
+                # print(type(all_questions))
+            #     target_questions = [question for question in all_questions if question.category.id==quiz_category['id'] ]
+            # #     all_questions.filter(
+            # #         category=quiz_category['id']
+            # # )
+                target_questions = Question.query.filter_by(
+                    category=quiz_category['id']).filter(Question.id.notin_((previous_questions))).all()
+            if len(target_questions) > 0:
+                target_question = random.choice(target_questions).format()
+            else:
+                target_question = None
             return jsonify({
                 'success': True,
-                'question': new_question
+                'question': target_question
             })
         except Exception as exp:
             print(f"Error: {exp}")
@@ -312,7 +360,6 @@ def create_app(test_config=None):
             "error": 500,
             "message": "Server Error!!!"
         }), 500
-
 
 
     return app

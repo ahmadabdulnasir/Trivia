@@ -4,12 +4,12 @@ from flask_sqlalchemy import SQLAlchemy
 import json
 from flask_migrate import Migrate
 
-DB_NAME = os.environ.get("DB_NAME",)
-DB_USERNAME = os.environ.get("DB_USERNAME",)
-DB_PASSWORD = os.environ.get("DB_PASSWORD",)
+DB_NAME = os.environ.get("DB_NAME")
+DB_USERNAME = os.environ.get("DB_USERNAME")
+DB_PASSWORD = os.environ.get("DB_PASSWORD")
 DB_HOST = os.environ.get("DB_HOST", "localhost")
 DB_PORT = os.environ.get("DB_PORT", 5432)
-#  = 
+#  =
 database_path = f"postgres://{DB_USERNAME}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
 
 db = SQLAlchemy()
@@ -20,6 +20,8 @@ db = SQLAlchemy()
 setup_db(app)
     binds a flask application and a SQLAlchemy service
 """
+
+
 def setup_db(app, database_path=database_path):
     app.config["SQLALCHEMY_DATABASE_URI"] = database_path
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
@@ -27,12 +29,15 @@ def setup_db(app, database_path=database_path):
     db.init_app(app)
     db.create_all()
 
+
 """
 Question
 
 """
+
+
 class Question(db.Model):
-    __tablename__ = 'questions'
+    __tablename__ = "questions"
 
     id = Column(Integer, primary_key=True)
     question = Column(String)
@@ -59,19 +64,22 @@ class Question(db.Model):
 
     def format(self):
         return {
-            'id': self.id,
-            'question': self.question,
-            'answer': self.answer,
-            'category': self.category,
-            'difficulty': self.difficulty
-            }
+            "id": self.id,
+            "question": self.question,
+            "answer": self.answer,
+            "category": self.category,
+            "difficulty": self.difficulty,
+        }
+
 
 """
 Category
 
 """
+
+
 class Category(db.Model):
-    __tablename__ = 'categories'
+    __tablename__ = "categories"
 
     id = Column(Integer, primary_key=True)
     type = Column(String)
@@ -80,7 +88,4 @@ class Category(db.Model):
         self.type = type
 
     def format(self):
-        return {
-            'id': self.id,
-            'type': self.type
-            }
+        return {"id": self.id, "type": self.type}

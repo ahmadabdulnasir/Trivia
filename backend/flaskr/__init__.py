@@ -4,10 +4,11 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
 import random
 
-from models import setup_db, Question, Category
+from models import setup_db, Question, Category, database_path
 
 QUESTIONS_PER_PAGE = 10
 
+print(database_path)
 
 def paginate_questions(request, questions):
     """Pagination helper of questions
@@ -167,11 +168,11 @@ def create_app(test_config=None):
             if not required_info.get(entry):
                 error_list.append(f"Invalid Entry of: {entry}")
         if error_list:
-            print({
-                'success': False,
-                "detail": "Fail to Create Question, Non or Partial Data Received.",
-                "errors": error_list,
-            })
+            # return jsonify({
+            #     'success': False,
+            #     "detail": "Fail to Create Question, Non or Partial Data Received.",
+            #     "errors": error_list,
+            # })
             abort(406)
 
         try:
@@ -218,7 +219,7 @@ def create_app(test_config=None):
 
             return jsonify({
                 'success': True,
-                'questions': [question.format() for question in paginated_search_results],
+                'questions': [question for question in paginated_search_results],
                 'total_questions': len(search_results),
                 'current_category': None
             })
@@ -275,7 +276,10 @@ def create_app(test_config=None):
         try:
             body = request.get_json()
             quiz_category = body.get("quiz_category")
-            previous_questions = body.get("previous_questions")
+            previous_questions = body.get("previous_questions", [])
+            # To handle when previous_questions was sent as null
+            if not previous_questions:
+                previous_questions = []
             required_info = {
                 "quiz_category": quiz_category,
                 # "previous_questions": previous_questions,
@@ -291,8 +295,8 @@ def create_app(test_config=None):
                     "errors": error_list,
                 })
                 abort(406)
-            # print(quiz_category)
-            # print(previous_questions)
+            print(quiz_category)
+            print(previous_questions)
             # get
             all_questions = Question.query.filter(
                 Question.id.notin_((previous_questions))
@@ -300,11 +304,6 @@ def create_app(test_config=None):
             if quiz_category['type'] == 'click':
                 target_questions = all_questions
             else:
-                # print(type(all_questions))
-            #     target_questions = [question for question in all_questions if question.category.id==quiz_category['id'] ]
-            # #     all_questions.filter(
-            # #         category=quiz_category['id']
-            # # )
                 target_questions = Question.query.filter_by(
                     category=quiz_category['id']).filter(Question.id.notin_((previous_questions))).all()
             if len(target_questions) > 0:
@@ -333,6 +332,14 @@ def create_app(test_config=None):
             "error": 404,
             "message": "Not Found!!!"
         }), 404
+
+    @app.errorhandler(406)
+    def not_found_error(error):
+        return jsonify({
+            "success": False,
+            "error": 406,
+            "message": "Not Acceptable!!!"
+        }), 406
     
     @app.errorhandler(422)
     def unprocessable_error(error):

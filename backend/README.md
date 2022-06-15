@@ -67,26 +67,253 @@ One note before you delve into your tasks: for each endpoint, you are expected t
 8. Create a `POST` endpoint to get questions to play the quiz. This endpoint should take a category and previous question parameters and return a random questions within the given category, if provided, and that is not one of the previous questions.
 9. Create error handlers for all expected errors including 400, 404, 422, and 500.
 
-## Documenting your Endpoints
 
-You will need to provide detailed documentation of your API endpoints including the URL, request parameters, and the response body. Use the example below as a reference.
+## Endpoint Documentation
 
-### Documentation Example
-
-`GET '/api/v1.0/categories'`
-
-- Fetches a dictionary of categories in which the keys are the ids and the value is the corresponding string of the category
-- Request Arguments: None
-- Returns: An object with a single key, `categories`, that contains an object of `id: category_string` key: value pairs.
+### GET `/categories`
+- Fetches a dictionary of categories in which the keys are the ids and the value is the corresponding string of the category.
+- Request arguments: None.
+- Returns:  An object with these keys:
+  - `success`: The success flag
+  - `categories`: Contains a object of `id:category_string` and `key:value pairs`.
 
 ```json
 {
-  "1": "Science",
-  "2": "Art",
-  "3": "Geography",
-  "4": "History",
-  "5": "Entertainment",
-  "6": "Sports"
+  "categories": {
+    "1": "Science",
+    "2": "Art",
+    "3": "Geography",
+    "4": "History",
+    "5": "Entertainment",
+    "6": "Sports"
+  },
+  "success": true
+}
+```
+
+### GET `/questions`
+- Returns:
+  - A list of questions paginated by 10 questions per page
+  - A dictionary of categories
+  - The total of questions
+  - The current category
+- Request arguments:
+  - `page` (integer) - The current page (default to 1)
+- Response: An object with these keys:
+  - `success`: The success flag
+  - `questions`: A list of questions (paginated by 10 items)
+  - `categories`: A dictionary of categories
+  - `total_questions`: The total of questions
+  - `current_category`: The current category
+
+```json
+{
+  "categories": {
+    "1": "Science",
+    "2": "Art",
+    "3": "Geography",
+    "4": "History",
+    "5": "Entertainment",
+    "6": "Sports"
+  },
+  "questions": [
+    {
+      "answer": "Tom Cruise",
+      "category": 5,
+      "difficulty": 4,
+      "id": 4,
+      "question": "What actor did author Anne Rice first denounce, then praise in the role of her beloved Lestat?"
+    },
+    {
+      "answer": "Maya Angelou",
+      "category": 4,
+      "difficulty": 2,
+      "id": 5,
+      "question": "Whose autobiography is entitled 'I Know Why the Caged Bird Sings'?"
+    },
+  ],
+  "success": true,
+  "total_questions": 19
+}
+```
+
+### DELETE `/questions/:question_id/`
+- Delete question using the question ID
+- Request query params:
+  - `question_id` (integer): The question id
+- Response: An object with theses keys:
+  - `success` flag of success `boolean`.
+  - `deleted` ID of the deleted question.
+
+```json
+{
+  "success": true,
+  "deleted": 1,
+}
+```
+
+### POST `/questions`
+- Create a new question.
+- Request Body:
+  - `question` (char) - The question
+  - `answer` (char) - The answer
+  - `difficulty` (char) - The question difficulty
+  - `category` (char) - The question category
+- Response: An object with theses keys:
+  - `success` flag of success `boolean`.
+  - `created` ID of the created question.
+
+```json
+{
+  "success": true,
+  "created": 1,
+}
+```
+
+### POST `/search`
+- Search a question.
+- Request arguments:
+  - `search` (char) - The term to search
+- Returns: An object with these keys:
+  - `success`: The success flag
+  - `questions`: A list of questions
+  - `total_questions`: The total of questions
+  - `current_category`: The current category
+
+```json
+{
+  "success": true,
+  "questions": [
+    {
+      "answer": "Apollo 13",
+      "category": 5,
+      "difficulty": 4,
+      "id": 2,
+      "question": "What movie earned Tom Hanks his third straight Oscar nomination, in 1996?"
+    },
+    {
+      "answer": "Tom Cruise",
+      "category": 5,
+      "difficulty": 4,
+      "id": 4,
+      "question": "What actor did author Anne Rice first denounce, then praise in the role of her beloved Lestat?"
+    },
+  ],
+  "total_questions": 10,
+  "current_category": null,
+}
+```
+
+
+### GET `/categories/:category_id/questions`
+- Return list of questions based on category.
+- Request arguments:
+  - `category_id` (integer): The category id
+- Response: An object with these keys:
+  - `success`: success flag
+  - `questions`: List of questions paginated by 10 questions
+  - `total_questions`: total of questions
+  - `current_category`: current category
+
+```json
+{
+  "success": true,
+  "questions": [
+    {
+      "answer": "Apollo 13",
+      "category": 5,
+      "difficulty": 4,
+      "id": 2,
+      "question": "What movie earned Tom Hanks his third straight Oscar nomination, in 1996?"
+    },
+    {
+      "answer": "Tom Cruise",
+      "category": 5,
+      "difficulty": 4,
+      "id": 4,
+      "question": "What actor did author Anne Rice first denounce, then praise in the role of her beloved Lestat?"
+    },
+  ],
+  "total_questions": 10,
+  "current_category": 1,
+}
+```
+
+### POST `/quizzes`
+- Return a question to play the quiz.
+- Request body (json):
+  - `quiz_category` (dict): quiz category with the `type` and the `id`.
+  - `previous_ids` (list): previous questions ids or null
+- Response: An object with these keys:
+  - `success`: The success flag
+  - `question`: The question to play
+
+```json
+{
+  "success": true,
+  "question":{
+    "answer": "Apollo 13",
+    "category": 5,
+    "difficulty": 4,
+    "id": 2,
+    "question": "What movie earned Tom Hanks his third straight Oscar nomination, in 1996?"
+  }
+}
+```
+
+## Errors
+### Error 400
+- Returns an object with these keys: `success`, `error` and `message`.
+
+```json
+{
+  "success": false,
+  "error": 400,
+  "message": "Bad request!!!"
+}
+```
+
+### Error 404
+- Returns an object with these keys: `success`, `error` and `message`.
+
+```json
+{
+  "success": false,
+  "error": 404,
+  "message": "Not Found!!!"
+}
+```
+
+### Error 422
+- Returns an object with these keys: `success`, `error` and `message`.
+
+```json
+{
+  "success": false,
+  "error": 422,
+  "message": "Request Unprocessable!!!"
+}
+```
+
+### Error 406
+- Returns an object with these keys: `success`, `error` and `message`.
+
+```json
+{
+  "success": false,
+  "error": 406,
+  "message": "Not Acceptable!!!"
+}
+```
+
+### Error 500
+- Returns an object with these keys: `success`, `error` and `message`.
+
+```json
+{
+  "success": false,
+  "error": 500,
+  "message": "Server Error!!!"
 }
 ```
 
@@ -97,9 +324,9 @@ Write at least one test for the success and at least one error behavior of each 
 To deploy the tests, run
 
 ```bash
-dropdb trivia_test
-createdb trivia_test
-psql trivia_test < trivia.psql
+dropdb udacity_test_triviadb
+createdb udacity_test_triviadb
+psql udacity_test_triviadb < trivia.psql
 python test_flaskr.py
 ```
 

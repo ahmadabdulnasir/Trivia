@@ -4,9 +4,14 @@ from flask_sqlalchemy import SQLAlchemy
 import json
 from flask_migrate import Migrate
 
-database_name = 'udacity_triviadb'
-database_path = 'postgres://udacity_trivia:Pass@1234@{}/{}'.format('localhost:5432', database_name)
-# SQLALCHEMY_DATABASE_URI = "postgres://udacity_fyyur:Pass@1234@localhost:5432/udacity_fyyurdb"
+DB_NAME = os.environ.get("DB_NAME",)
+DB_USERNAME = os.environ.get("DB_USERNAME",)
+DB_PASSWORD = os.environ.get("DB_PASSWORD",)
+DB_HOST = os.environ.get("DB_HOST", "localhost")
+DB_PORT = os.environ.get("DB_PORT", 5432)
+#  = 
+database_path = f"postgres://{DB_USERNAME}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+
 db = SQLAlchemy()
 # migrate = Migrate()
 

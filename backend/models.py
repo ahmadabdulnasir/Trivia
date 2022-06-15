@@ -4,11 +4,20 @@ from flask_sqlalchemy import SQLAlchemy
 import json
 from flask_migrate import Migrate
 
-DB_NAME = os.environ.get("DB_NAME")
-DB_USERNAME = os.environ.get("DB_USERNAME")
-DB_PASSWORD = os.environ.get("DB_PASSWORD")
-DB_HOST = os.environ.get("DB_HOST", "localhost")
-DB_PORT = os.environ.get("DB_PORT", 5432)
+from dotenv import load_dotenv
+# load environmental variables from .env
+load_dotenv()
+# DB_NAME = os.environ.get("DB_NAME")
+# DB_USERNAME = os.environ.get("DB_USERNAME")
+# DB_PASSWORD = os.environ.get("DB_PASSWORD")
+# DB_HOST = os.environ.get("DB_HOST", "localhost")
+# DB_PORT = os.environ.get("DB_PORT", 5432)
+DB_NAME = os.getenv("DB_NAME")
+DB_USERNAME = os.getenv("DB_USERNAME")
+DB_PASSWORD = os.getenv("DB_PASSWORD")
+DB_HOST = os.getenv("DB_HOST")
+DB_PORT = os.getenv("DB_PORT")
+
 #  =
 database_path = f"postgres://{DB_USERNAME}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
 

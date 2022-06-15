@@ -1,3 +1,4 @@
+from dotenv import load_dotenv
 import os
 import unittest
 import json
@@ -7,19 +8,21 @@ from flaskr import create_app
 from models import setup_db, Question, Category
 
 basedir = os.path.abspath(os.path.dirname(__file__))
+load_dotenv()
 
-# No need to hide database information, because sqlite was used
 # test_database = f"sqlite:///{os.path.join(basedir, 'database.db')}"
-TEST_DB_NAME = os.environ.get("TEST_DB_NAME")
-TEST_DB_USERNAME = os.environ.get("TEST_DB_USERNAME")
-TEST_DB_PASSWORD = os.environ.get("TEST_DB_PASSWORD")
-TEST_DB_HOST = os.environ.get("TEST_DB_HOST", "localhost")
-TEST_DB_PORT = os.environ.get("TEST_DB_PORT", 5432)
-#  =
+# TEST_DB_NAME = os.environ.get("TEST_DB_NAME")
+# TEST_DB_USERNAME = os.environ.get("TEST_DB_USERNAME")
+# TEST_DB_PASSWORD = os.environ.get("TEST_DB_PASSWORD")
+# TEST_DB_HOST = os.environ.get("TEST_DB_HOST", "localhost")
+# TEST_DB_PORT = os.environ.get("TEST_DB_PORT", 5432)
+TEST_DB_NAME = os.getenv("TEST_DB_NAME")
+TEST_DB_USERNAME = os.getenv("TEST_DB_USERNAME")
+TEST_DB_PASSWORD = os.getenv("TEST_DB_PASSWORD")
+TEST_DB_HOST = os.getenv("TEST_DB_HOST")
+TEST_DB_PORT = os.getenv("TEST_DB_PORT")
+
 database_path = f"postgres://{TEST_DB_USERNAME}:{TEST_DB_PASSWORD}@{TEST_DB_HOST}:{TEST_DB_PORT}/{TEST_DB_NAME}"
-
-# app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-
 
 class TriviaTestCase(unittest.TestCase):
     """This class represents the trivia test case"""

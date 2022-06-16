@@ -5,6 +5,7 @@ import json
 from flask_migrate import Migrate
 
 from dotenv import load_dotenv
+
 # load environmental variables from .env
 load_dotenv()
 # DB_NAME = os.environ.get("DB_NAME")

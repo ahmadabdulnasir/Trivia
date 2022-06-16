@@ -24,6 +24,7 @@ TEST_DB_PORT = os.getenv("TEST_DB_PORT")
 
 database_path = f"postgres://{TEST_DB_USERNAME}:{TEST_DB_PASSWORD}@{TEST_DB_HOST}:{TEST_DB_PORT}/{TEST_DB_NAME}"
 
+
 class TriviaTestCase(unittest.TestCase):
     """This class represents the trivia test case"""
 
